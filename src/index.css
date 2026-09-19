@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-cream: #FAF7F2;
+  --ink-charcoal: #2D2A26;
+  --primary-coral: #FF7B54;
+  --mint-gain: #2EC4B6;
+  --accent-sky: #64B5F6;
+  --accent-yellow: #FFD166;
+  --accent-lilac: #CDB4DB;
+}
+
+body {
+  background-color: var(--bg-cream);
+  color: var(--ink-charcoal);
+  font-family: 'Quicksand', sans-serif;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Baloo 2', cursive, sans-serif;
+}
