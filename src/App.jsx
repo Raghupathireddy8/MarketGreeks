@@ -1,44 +1,39 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   TrendingUp, TrendingDown, BookOpen, Shield, Award, 
   HelpCircle, ChevronRight, Activity, ArrowRight, CheckCircle2,
   DollarSign, BarChart3, PieChart, Sparkles, AlertCircle, 
   RefreshCw, Scale, Search, SlidersHorizontal, Info, X,
   Layers, Lock, Smartphone, Mail, KeyRound, ExternalLink,
-  ChevronDown, Building, FileText, Briefcase
+  ChevronDown, Building, FileText, Briefcase, Loader2
 } from 'lucide-react';
 
-// --- STOCKS & INDICES UNIVERSE WITH 5 PILLARS ---
-const STOCKS_DATA = [
+// --- BASELINE NSE 5-PILLAR DATASET (TOP 10 NIFTY HEAVYWEIGHTS + POPULAR STOCKS) ---
+const INITIAL_STOCKS_DATA = [
   {
     id: 'hdfc-bank',
     symbol: 'HDFCBANK',
     name: 'HDFC Bank Ltd.',
-    sector: 'Banking',
+    sector: 'Financial Services',
     indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 1642.50,
+    price: 1648.50,
     change: 1.15,
-    marketCapCr: 1248900,
-    sharesCountCr: 760.3,
-    // Pillar 1: Valuation
+    marketCapCr: 1256000,
+    sharesCountCr: 761.9,
     pe: 19.4,
     pb: 2.8,
     evToEbitda: 14.2,
     divYield: 1.18,
-    // Pillar 2: Profitability
-    roe: 17.2,
-    netMargin: 24.5,
-    operatingMargin: 38.2,
-    // Pillar 3: Financial Health
-    debtToEquity: 1.1, // Adjusted for Banking leverage
-    interestCoverage: 12.5,
-    currentRatio: 1.4,
-    // Pillar 4: Growth
-    profitGrowthYoY: 18.4,
-    salesCagr3Y: 16.8,
-    // In-depth metrics
-    cashRatio: 0.85,
-    freeCashFlowCr: 42300,
+    roe: 16.8,
+    netMargin: 23.4,
+    operatingMargin: 38.5,
+    debtToEquity: 1.15,
+    interestCoverage: 11.8,
+    currentRatio: 1.35,
+    profitGrowthYoY: 18.2,
+    salesCagr3Y: 16.4,
+    cashRatio: 0.82,
+    freeCashFlowCr: 41200,
     sharpeRatio: 1.42,
     sortinoRatio: 2.10,
     beta: 0.88,
@@ -49,52 +44,278 @@ const STOCKS_DATA = [
     publicHolding: 17.3
   },
   {
-    id: 'yes-bank',
-    symbol: 'YESBANK',
-    name: 'Yes Bank Ltd.',
-    sector: 'Banking',
-    indexUniverse: ['Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 24.50,
-    change: -0.85,
-    marketCapCr: 76800,
-    sharesCountCr: 3135.0,
-    // Pillar 1: Valuation
-    pe: 58.4,
-    pb: 1.8,
-    evToEbitda: 28.6,
-    divYield: 0.00,
-    // Pillar 2: Profitability
-    roe: 3.4,
-    netMargin: 4.8,
-    operatingMargin: 12.1,
-    // Pillar 3: Financial Health
-    debtToEquity: 2.4,
-    interestCoverage: 2.8,
-    currentRatio: 1.05,
-    // Pillar 4: Growth
-    profitGrowthYoY: 10.2,
-    salesCagr3Y: 6.4,
-    // In-depth metrics
-    cashRatio: 0.42,
-    freeCashFlowCr: 1200,
-    sharpeRatio: 0.35,
-    sortinoRatio: 0.48,
-    beta: 1.45,
-    alpha1Y: -4.8,
+    id: 'reliance',
+    symbol: 'RELIANCE',
+    name: 'Reliance Industries Ltd.',
+    sector: 'Energy & Conglomerate',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 2985.40,
+    change: 1.85,
+    marketCapCr: 2019800,
+    sharesCountCr: 676.6,
+    pe: 27.8,
+    pb: 2.4,
+    evToEbitda: 15.8,
+    divYield: 0.36,
+    roe: 9.6,
+    netMargin: 7.9,
+    operatingMargin: 17.8,
+    debtToEquity: 0.42,
+    interestCoverage: 8.5,
+    currentRatio: 1.18,
+    profitGrowthYoY: 11.2,
+    salesCagr3Y: 22.1,
+    cashRatio: 0.65,
+    freeCashFlowCr: 36400,
+    sharpeRatio: 1.15,
+    sortinoRatio: 1.75,
+    beta: 1.05,
+    alpha1Y: 1.8,
     promoterPledge: 0.0,
-    fiiHolding: 12.8,
-    diiHolding: 42.1,
-    publicHolding: 45.1
+    fiiHolding: 21.8,
+    diiHolding: 17.4,
+    publicHolding: 10.6
+  },
+  {
+    id: 'icici-bank',
+    symbol: 'ICICIBANK',
+    name: 'ICICI Bank Ltd.',
+    sector: 'Financial Services',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 1238.20,
+    change: 1.45,
+    marketCapCr: 871000,
+    sharesCountCr: 703.4,
+    pe: 18.2,
+    pb: 3.1,
+    evToEbitda: 13.8,
+    divYield: 0.85,
+    roe: 18.5,
+    netMargin: 24.8,
+    operatingMargin: 42.1,
+    debtToEquity: 1.10,
+    interestCoverage: 12.8,
+    currentRatio: 1.30,
+    profitGrowthYoY: 19.4,
+    salesCagr3Y: 24.6,
+    cashRatio: 0.90,
+    freeCashFlowCr: 32000,
+    sharpeRatio: 1.78,
+    sortinoRatio: 2.65,
+    beta: 0.92,
+    alpha1Y: 8.4,
+    promoterPledge: 0.0,
+    fiiHolding: 44.8,
+    diiHolding: 35.6,
+    publicHolding: 19.6
+  },
+  {
+    id: 'bharti-airtel',
+    symbol: 'BHARTIARTL',
+    name: 'Bharti Airtel Ltd.',
+    sector: 'Telecommunication',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 1565.30,
+    change: 2.10,
+    marketCapCr: 914000,
+    sharesCountCr: 583.9,
+    pe: 62.4,
+    pb: 8.2,
+    evToEbitda: 13.2,
+    divYield: 0.52,
+    roe: 17.8,
+    netMargin: 10.8,
+    operatingMargin: 52.6,
+    debtToEquity: 1.75,
+    interestCoverage: 3.8,
+    currentRatio: 0.85,
+    profitGrowthYoY: 48.5,
+    salesCagr3Y: 18.2,
+    cashRatio: 0.45,
+    freeCashFlowCr: 24000,
+    sharpeRatio: 1.95,
+    sortinoRatio: 2.85,
+    beta: 0.82,
+    alpha1Y: 21.4,
+    promoterPledge: 0.0,
+    fiiHolding: 25.1,
+    diiHolding: 21.2,
+    publicHolding: 53.7
+  },
+  {
+    id: 'infosys',
+    symbol: 'INFY',
+    name: 'Infosys Ltd.',
+    sector: 'Information Technology',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 1892.50,
+    change: -0.45,
+    marketCapCr: 785600,
+    sharesCountCr: 415.1,
+    pe: 29.8,
+    pb: 8.9,
+    evToEbitda: 20.2,
+    divYield: 2.45,
+    roe: 32.1,
+    netMargin: 17.2,
+    operatingMargin: 21.8,
+    debtToEquity: 0.08,
+    interestCoverage: 52.0,
+    currentRatio: 2.25,
+    profitGrowthYoY: 7.2,
+    salesCagr3Y: 12.4,
+    cashRatio: 1.75,
+    freeCashFlowCr: 23100,
+    sharpeRatio: 1.35,
+    sortinoRatio: 1.95,
+    beta: 0.94,
+    alpha1Y: 4.8,
+    promoterPledge: 0.0,
+    fiiHolding: 34.5,
+    diiHolding: 35.8,
+    publicHolding: 14.9
+  },
+  {
+    id: 'larsen-toubro',
+    symbol: 'LT',
+    name: 'Larsen & Toubro Ltd.',
+    sector: 'Construction & Capital Goods',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 3620.00,
+    change: 0.85,
+    marketCapCr: 498000,
+    sharesCountCr: 137.5,
+    pe: 36.2,
+    pb: 5.4,
+    evToEbitda: 19.5,
+    divYield: 0.95,
+    roe: 15.6,
+    netMargin: 6.2,
+    operatingMargin: 11.2,
+    debtToEquity: 1.25,
+    interestCoverage: 4.6,
+    currentRatio: 1.28,
+    profitGrowthYoY: 14.8,
+    salesCagr3Y: 19.5,
+    cashRatio: 0.55,
+    freeCashFlowCr: 14500,
+    sharpeRatio: 1.55,
+    sortinoRatio: 2.20,
+    beta: 1.08,
+    alpha1Y: 9.6,
+    promoterPledge: 0.0,
+    fiiHolding: 25.2,
+    diiHolding: 37.8,
+    publicHolding: 37.0
+  },
+  {
+    id: 'sbi',
+    symbol: 'SBIN',
+    name: 'State Bank of India',
+    sector: 'Financial Services',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 792.40,
+    change: 1.20,
+    marketCapCr: 707100,
+    sharesCountCr: 892.4,
+    pe: 10.4,
+    pb: 1.8,
+    evToEbitda: 9.2,
+    divYield: 1.72,
+    roe: 17.6,
+    netMargin: 15.2,
+    operatingMargin: 34.2,
+    debtToEquity: 1.45,
+    interestCoverage: 6.8,
+    currentRatio: 1.15,
+    profitGrowthYoY: 21.5,
+    salesCagr3Y: 18.6,
+    cashRatio: 0.65,
+    freeCashFlowCr: 28500,
+    sharpeRatio: 1.62,
+    sortinoRatio: 2.45,
+    beta: 1.18,
+    alpha1Y: 12.8,
+    promoterPledge: 0.0,
+    fiiHolding: 11.2,
+    diiHolding: 24.8,
+    publicHolding: 7.2
+  },
+  {
+    id: 'axis-bank',
+    symbol: 'AXISBANK',
+    name: 'Axis Bank Ltd.',
+    sector: 'Financial Services',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 1184.60,
+    change: 0.40,
+    marketCapCr: 366200,
+    sharesCountCr: 309.1,
+    pe: 14.5,
+    pb: 2.2,
+    evToEbitda: 11.6,
+    divYield: 0.08,
+    roe: 17.8,
+    netMargin: 20.5,
+    operatingMargin: 39.4,
+    debtToEquity: 1.22,
+    interestCoverage: 9.4,
+    currentRatio: 1.25,
+    profitGrowthYoY: 16.4,
+    salesCagr3Y: 22.8,
+    cashRatio: 0.85,
+    freeCashFlowCr: 18400,
+    sharpeRatio: 1.45,
+    sortinoRatio: 2.05,
+    beta: 1.12,
+    alpha1Y: 6.2,
+    promoterPledge: 0.0,
+    fiiHolding: 52.8,
+    diiHolding: 29.4,
+    publicHolding: 17.8
+  },
+  {
+    id: 'itc',
+    symbol: 'ITC',
+    name: 'ITC Limited',
+    sector: 'FMCG',
+    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 504.20,
+    change: -0.30,
+    marketCapCr: 629800,
+    sharesCountCr: 1249.2,
+    pe: 29.2,
+    pb: 8.4,
+    evToEbitda: 20.8,
+    divYield: 3.05,
+    roe: 29.5,
+    netMargin: 27.8,
+    operatingMargin: 36.4,
+    debtToEquity: 0.01,
+    interestCoverage: 110.0,
+    currentRatio: 2.80,
+    profitGrowthYoY: 9.5,
+    salesCagr3Y: 15.2,
+    cashRatio: 1.85,
+    freeCashFlowCr: 16800,
+    sharpeRatio: 1.48,
+    sortinoRatio: 2.15,
+    beta: 0.65,
+    alpha1Y: 2.8,
+    promoterPledge: 0.0,
+    fiiHolding: 42.5,
+    diiHolding: 38.2,
+    publicHolding: 19.3
   },
   {
     id: 'tcs',
     symbol: 'TCS',
     name: 'Tata Consultancy Services',
-    sector: 'IT',
+    sector: 'Information Technology',
     indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 4180.00,
+    price: 4210.00,
     change: 0.65,
-    marketCapCr: 1512000,
+    marketCapCr: 1522700,
     sharesCountCr: 361.7,
     pe: 31.8,
     pb: 14.5,
@@ -103,12 +324,12 @@ const STOCKS_DATA = [
     roe: 48.5,
     netMargin: 19.8,
     operatingMargin: 26.0,
-    debtToEquity: 0.0,
+    debtToEquity: 0.00,
     interestCoverage: 65.0,
-    currentRatio: 2.6,
+    currentRatio: 2.60,
     profitGrowthYoY: 12.5,
     salesCagr3Y: 14.2,
-    cashRatio: 2.1,
+    cashRatio: 2.10,
     freeCashFlowCr: 41000,
     sharpeRatio: 1.65,
     sortinoRatio: 2.45,
@@ -120,47 +341,14 @@ const STOCKS_DATA = [
     publicHolding: 5.3
   },
   {
-    id: 'reliance',
-    symbol: 'RELIANCE',
-    name: 'Reliance Industries Ltd.',
-    sector: 'Energy & Retail',
-    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 2980.20,
-    change: 1.80,
-    marketCapCr: 2016000,
-    sharesCountCr: 676.5,
-    pe: 28.5,
-    pb: 2.6,
-    evToEbitda: 16.8,
-    divYield: 0.35,
-    roe: 9.8,
-    netMargin: 7.9,
-    operatingMargin: 18.2,
-    debtToEquity: 0.42,
-    interestCoverage: 8.2,
-    currentRatio: 1.15,
-    profitGrowthYoY: 11.8,
-    salesCagr3Y: 22.4,
-    cashRatio: 0.65,
-    freeCashFlowCr: 35000,
-    sharpeRatio: 1.15,
-    sortinoRatio: 1.75,
-    beta: 1.05,
-    alpha1Y: 1.8,
-    promoterPledge: 0.0,
-    fiiHolding: 21.8,
-    diiHolding: 17.2,
-    publicHolding: 10.6
-  },
-  {
     id: 'tata-motors',
     symbol: 'TATAMOTORS',
     name: 'Tata Motors Ltd.',
     sector: 'Automobile',
     indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 985.40,
+    price: 978.40,
     change: 2.45,
-    marketCapCr: 362400,
+    marketCapCr: 359800,
     sharesCountCr: 367.8,
     pe: 14.8,
     pb: 3.8,
@@ -186,37 +374,37 @@ const STOCKS_DATA = [
     publicHolding: 17.6
   },
   {
-    id: 'itc',
-    symbol: 'ITC',
-    name: 'ITC Limited',
-    sector: 'FMCG',
-    indexUniverse: ['Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 495.10,
-    change: -0.30,
-    marketCapCr: 618500,
-    sharesCountCr: 1249.2,
-    pe: 29.2,
-    pb: 8.4,
-    evToEbitda: 20.8,
-    divYield: 3.10,
-    roe: 29.5,
-    netMargin: 27.8,
-    operatingMargin: 36.4,
-    debtToEquity: 0.01,
-    interestCoverage: 110.0,
-    currentRatio: 2.8,
-    profitGrowthYoY: 9.5,
-    salesCagr3Y: 15.2,
-    cashRatio: 1.85,
-    freeCashFlowCr: 16800,
-    sharpeRatio: 1.48,
-    sortinoRatio: 2.15,
-    beta: 0.65,
-    alpha1Y: 2.8,
+    id: 'yes-bank',
+    symbol: 'YESBANK',
+    name: 'Yes Bank Ltd.',
+    sector: 'Financial Services',
+    indexUniverse: ['Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
+    price: 24.50,
+    change: -0.85,
+    marketCapCr: 76800,
+    sharesCountCr: 3135.0,
+    pe: 58.4,
+    pb: 1.8,
+    evToEbitda: 28.6,
+    divYield: 0.00,
+    roe: 3.4,
+    netMargin: 4.8,
+    operatingMargin: 12.1,
+    debtToEquity: 2.40,
+    interestCoverage: 2.8,
+    currentRatio: 1.05,
+    profitGrowthYoY: 10.2,
+    salesCagr3Y: 6.4,
+    cashRatio: 0.42,
+    freeCashFlowCr: 1200,
+    sharpeRatio: 0.35,
+    sortinoRatio: 0.48,
+    beta: 1.45,
+    alpha1Y: -4.8,
     promoterPledge: 0.0,
-    fiiHolding: 42.5,
-    diiHolding: 38.2,
-    publicHolding: 19.3
+    fiiHolding: 12.8,
+    diiHolding: 42.1,
+    publicHolding: 45.1
   },
   {
     id: 'suzlon',
@@ -231,7 +419,7 @@ const STOCKS_DATA = [
     pe: 95.2,
     pb: 22.4,
     evToEbitda: 48.5,
-    divYield: 0.0,
+    divYield: 0.00,
     roe: 24.5,
     netMargin: 9.2,
     operatingMargin: 15.6,
@@ -257,23 +445,23 @@ const STOCKS_DATA = [
     name: 'Zomato Ltd.',
     sector: 'Consumer Tech',
     indexUniverse: ['Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'],
-    price: 265.40,
+    price: 268.40,
     change: 3.10,
-    marketCapCr: 234500,
+    marketCapCr: 237100,
     sharesCountCr: 883.5,
     pe: 112.5,
     pb: 11.2,
     evToEbitda: 78.2,
-    divYield: 0.0,
+    divYield: 0.00,
     roe: 4.8,
     netMargin: 3.2,
     operatingMargin: 5.4,
     debtToEquity: 0.02,
     interestCoverage: 45.0,
-    currentRatio: 4.5,
+    currentRatio: 4.50,
     profitGrowthYoY: 240.0,
     salesCagr3Y: 65.2,
-    cashRatio: 3.8,
+    cashRatio: 3.80,
     freeCashFlowCr: 1850,
     sharpeRatio: 1.82,
     sortinoRatio: 2.95,
@@ -288,11 +476,16 @@ const STOCKS_DATA = [
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [stocksList, setStocksList] = useState(INITIAL_STOCKS_DATA);
+  const [isLoadingLive, setIsLoadingLive] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
   const [selectedStockDrawer, setSelectedStockDrawer] = useState(null);
-  const [selectedBenchmark, setSelectedBenchmark] = useState(STOCKS_DATA[0]); // HDFC Bank
-  const [selectedTarget, setSelectedTarget] = useState(STOCKS_DATA[1]); // Yes Bank
+  const [selectedBenchmark, setSelectedBenchmark] = useState(INITIAL_STOCKS_DATA[0]); // HDFC Bank
+  const [selectedTarget, setSelectedTarget] = useState(INITIAL_STOCKS_DATA[11]); // Yes Bank
   const [targetPriceGoal, setTargetPriceGoal] = useState(100);
   const [indexFilter, setIndexFilter] = useState('All NSE');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Virtual Trading State
   const [isRegistered, setIsRegistered] = useState(false);
@@ -304,7 +497,7 @@ export default function App() {
   const [virtualCash, setVirtualCash] = useState(1000000);
   const [positions, setPositions] = useState([
     { id: 1, symbol: 'NIFTY 25000 CE', type: 'CE', qty: 75, avgPrice: 142.50, ltp: 165.20 },
-    { id: 2, symbol: 'HDFCBANK', type: 'EQUITY', qty: 100, avgPrice: 1610.00, ltp: 1642.50 }
+    { id: 2, symbol: 'HDFCBANK', type: 'EQUITY', qty: 100, avgPrice: 1610.00, ltp: 1648.50 }
   ]);
 
   // Option Calculator State
@@ -317,9 +510,47 @@ export default function App() {
   // Legal Modals
   const [activeLegalModal, setActiveLegalModal] = useState(null);
 
+  // --- LIVE DATA FETCH FUNCTION ---
+  const fetchLiveMarketData = async () => {
+    setIsLoadingLive(true);
+    try {
+      const updatedList = await Promise.all(
+        stocksList.map(async (stock) => {
+          try {
+            const res = await fetch(`/api/fundamentals/${stock.symbol}`);
+            if (!res.ok) return stock;
+            const data = await res.json();
+            return {
+              ...stock,
+              price: data.price ? Number(data.price) : stock.price,
+              pe: data.pe ? Number(data.pe) : stock.pe,
+              pb: data.pb ? Number(data.pb) : stock.pb,
+              roe: data.roe ? Number(data.roe) : stock.roe,
+              debtToEquity: data.debtToEquity !== undefined ? Number(data.debtToEquity) : stock.debtToEquity,
+              profitGrowthYoY: data.profitGrowthYoY !== undefined ? Number(data.profitGrowthYoY) : stock.profitGrowthYoY
+            };
+          } catch (err) {
+            return stock;
+          }
+        })
+      );
+      setStocksList(updatedList);
+      setLastUpdated(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (e) {
+      console.warn("Could not load live values, using baseline fallback:", e);
+    } finally {
+      setIsLoadingLive(false);
+    }
+  };
+
+  // Automatically fetch live prices on initial page load
+  useEffect(() => {
+    fetchLiveMarketData();
+  }, []);
+
   // Compute Fundamental Strength Score (0-100)
   const rankedStocks = useMemo(() => {
-    return STOCKS_DATA.map(st => {
+    return stocksList.map(st => {
       let score = 50;
       // Valuation
       if (st.pe > 0 && st.pe < 25) score += 12;
@@ -343,14 +574,22 @@ export default function App() {
         strengthScore: Math.min(Math.max(score, 10), 98)
       };
     }).sort((a, b) => b.strengthScore - a.strengthScore);
-  }, []);
+  }, [stocksList]);
 
+  // Filter stocks by Universe + Real-Time Search Query
   const filteredStocks = useMemo(() => {
-    if (indexFilter === 'All NSE') return rankedStocks;
-    return rankedStocks.filter(s => s.indexUniverse.includes(indexFilter));
-  }, [rankedStocks, indexFilter]);
+    return rankedStocks.filter(stock => {
+      const matchesIndex = (indexFilter === 'All NSE') || stock.indexUniverse.includes(indexFilter);
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch = !q || 
+        stock.name.toLowerCase().includes(q) || 
+        stock.symbol.toLowerCase().includes(q) || 
+        stock.sector.toLowerCase().includes(q);
+      return matchesIndex && matchesSearch;
+    });
+  }, [rankedStocks, indexFilter, searchQuery]);
 
-  // Black-Scholes Formula Approximation
+  // Black-Scholes Formula
   const greeksOutput = useMemo(() => {
     const T = Math.max(calcDTE / 365.0, 0.0001);
     const sigma = Math.max(calcIV / 100.0, 0.0001);
@@ -405,7 +644,7 @@ export default function App() {
 
   // Catch-Up / Parity calculations
   const parityMetrics = useMemo(() => {
-    if (!selectedTarget) return null;
+    if (!selectedTarget || !selectedBenchmark) return null;
     const currentPrice = selectedTarget.price;
     const targetPrice = targetPriceGoal;
     const priceSurgePct = ((targetPrice - currentPrice) / currentPrice) * 100;
@@ -441,7 +680,6 @@ export default function App() {
   const handleSquareOff = (id) => {
     const pos = positions.find(p => p.id === id);
     if (!pos) return;
-    const pnl = (pos.ltp - pos.avgPrice) * pos.qty;
     setVirtualCash(prev => prev + (pos.ltp * pos.qty));
     setPositions(positions.filter(p => p.id !== id));
   };
@@ -457,8 +695,9 @@ export default function App() {
         <span>NIFTY 50: <strong>25,385.40</strong> <span className="text-[#2EC4B6]">+124.50 (+0.49%)</span></span>
         <span>BANK NIFTY: <strong>52,140.80</strong> <span className="text-[#2EC4B6]">+280.20 (+0.54%)</span></span>
         <span>INDIA VIX: <strong>13.42</strong> <span className="text-[#FF7B54]">-0.45 (-3.2%)</span></span>
-        <span>HDFCBANK: <strong>₹1,642.50</strong> <span className="text-[#2EC4B6]">+1.15%</span></span>
-        <span>YESBANK: <strong>₹24.50</strong> <span className="text-[#FF7B54]">-0.85%</span></span>
+        <span>HDFCBANK: <strong>₹{stocksList.find(s=>s.symbol==='HDFCBANK')?.price.toFixed(2) || '1648.50'}</strong> <span className="text-[#2EC4B6]">+1.15%</span></span>
+        <span>RELIANCE: <strong>₹{stocksList.find(s=>s.symbol==='RELIANCE')?.price.toFixed(2) || '2985.40'}</strong> <span className="text-[#2EC4B6]">+1.85%</span></span>
+        <span>YESBANK: <strong>₹{stocksList.find(s=>s.symbol==='YESBANK')?.price.toFixed(2) || '24.50'}</strong> <span className="text-[#FF7B54]">-0.85%</span></span>
       </div>
 
       {/* Sticky Header */}
@@ -531,7 +770,7 @@ export default function App() {
                   Master the Stock Market with <span className="text-[#FF7B54]">Soft Clay</span> Clarity.
                 </h1>
                 <p className="text-base sm:text-lg text-[#2D2A26]/80 mb-8 font-medium">
-                  Compare company fundamentals without the financial jargon, demystify Option Greeks with intuitive visualizers, and paper-trade Nifty 50 with ₹10,00,000 risk-free capital.
+                  Compare company fundamentals without financial jargon, demystify Option Greeks with intuitive visualizers, and paper-trade Nifty 50 with ₹10,00,000 risk-free capital.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <button
@@ -561,7 +800,7 @@ export default function App() {
                 </div>
                 <h3 className="font-['Baloo_2'] text-xl font-bold mb-2">5-Pillar Fundamentals</h3>
                 <p className="text-sm text-[#2D2A26]/70">
-                  Filter by Nifty 50 to Nifty 1000. Rank stocks by Valuation, Profitability, Solvency, Growth, and Solvency score.
+                  Search & filter across top 10 heavyweights and smallcaps. Rank stocks by Valuation, Profitability, Solvency, and Growth.
                 </p>
               </div>
 
@@ -596,19 +835,60 @@ export default function App() {
 
         {/* ================= PAGE 2: FUNDAMENTALS & PARITY ================= */}
         {currentPage === 'fundamentals' && (
-          <div className="space-y-10">
-            {/* Index Universe Filters */}
+          <div className="space-y-8">
+            {/* Search, Filter & Live Refresh Controls */}
             <div className="bg-white p-6 rounded-3xl border border-[#2D2A26]/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="font-['Baloo_2'] text-2xl font-extrabold text-[#2D2A26]">
-                  NSE Fundamental Strength Screener
-                </h2>
-                <p className="text-sm text-[#2D2A26]/70">
-                  Ranked by 5 core analysis pillars (0–100 Strength Score).
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-['Baloo_2'] text-2xl font-extrabold text-[#2D2A26]">
+                    NSE Fundamental Strength Screener
+                  </h2>
+                  {lastUpdated && (
+                    <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#2EC4B6]/15 text-[#2EC4B6] font-bold">
+                      Live synced {lastUpdated}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#2D2A26]/70">
+                  Showing top liquid leaders & popular movers ({filteredStocks.length} of {stocksList.length} stocks)
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Instant Search Bar */}
+                <div className="relative min-w-[240px]">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#2D2A26]/40" />
+                  <input
+                    type="text"
+                    placeholder="Search stock (e.g. HDFC, TCS, Yes Bank)..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 text-xs font-bold rounded-xl bg-[#FAF7F2] border border-[#2D2A26]/15 outline-none focus:border-[#FF7B54] transition-colors"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2D2A26]/40 hover:text-[#2D2A26]"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Manual Live Refresh Button */}
+                <button
+                  onClick={fetchLiveMarketData}
+                  disabled={isLoadingLive}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#2D2A26]/20 text-xs font-bold hover:bg-[#2D2A26] hover:text-white transition-all disabled:opacity-50"
+                  title="Query Python /api/fundamentals for real-time prices"
+                >
+                  <RefreshCw size={13} className={isLoadingLive ? "animate-spin text-[#FF7B54]" : ""} />
+                  <span>{isLoadingLive ? 'Syncing...' : 'Refresh Live'}</span>
+                </button>
+              </div>
+
+              {/* Index Universe Pills */}
+              <div className="flex flex-wrap gap-1.5">
                 {['All NSE', 'Nifty 50', 'Nifty 100', 'Nifty 200', 'Nifty 500', 'Nifty 1000'].map(idx => (
                   <button
                     key={idx}
@@ -632,6 +912,7 @@ export default function App() {
                   <thead className="bg-[#FAF7F2] border-b border-[#2D2A26]/10 text-xs font-bold text-[#2D2A26]/70">
                     <tr>
                       <th className="py-4 px-6">Rank & Company</th>
+                      <th className="py-4 px-4">Market Cap</th>
                       <th className="py-4 px-4">Price</th>
                       <th className="py-4 px-4">P/E (Valuation)</th>
                       <th className="py-4 px-4">ROE % (Profitability)</th>
@@ -642,59 +923,70 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2D2A26]/5">
-                    {filteredStocks.map((stock, index) => (
-                      <tr key={stock.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded-lg bg-[#2D2A26]/5 text-[#2D2A26] font-bold text-xs flex items-center justify-center">
-                              #{index + 1}
-                            </span>
-                            <div>
-                              <div className="font-bold text-[#2D2A26]">{stock.name}</div>
-                              <div className="text-xs text-[#2D2A26]/50">{stock.symbol} • {stock.sector}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 font-bold">₹{stock.price.toFixed(2)}</td>
-                        <td className="py-4 px-4">
-                          <span className={`font-semibold ${stock.pe > 60 ? 'text-[#FF7B54]' : 'text-[#2D2A26]'}`}>
-                            {stock.pe}x
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`font-semibold ${stock.roe > 15 ? 'text-[#2EC4B6]' : 'text-[#2D2A26]'}`}>
-                            {stock.roe}%
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`font-semibold ${stock.debtToEquity > 1.5 ? 'text-[#FF7B54]' : 'text-[#2EC4B6]'}`}>
-                            {stock.debtToEquity}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`font-semibold ${stock.profitGrowthYoY > 0 ? 'text-[#2EC4B6]' : 'text-[#FF7B54]'}`}>
-                            {stock.profitGrowthYoY > 0 ? '+' : ''}{stock.profitGrowthYoY}%
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold ${
-                            stock.strengthScore >= 80 ? 'bg-[#2EC4B6]/20 text-[#2EC4B6]' :
-                            stock.strengthScore >= 60 ? 'bg-[#64B5F6]/20 text-[#2D2A26]' :
-                            'bg-[#FF7B54]/20 text-[#FF7B54]'
-                          }`}>
-                            {stock.strengthScore}/100
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <button
-                            onClick={() => setSelectedStockDrawer(stock)}
-                            className="px-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#2D2A26]/20 text-xs font-bold hover:bg-[#2D2A26] hover:text-white transition-all"
-                          >
-                            Ratios & Alpha
-                          </button>
+                    {filteredStocks.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="py-12 text-center text-[#2D2A26]/60 font-semibold">
+                          No stocks found matching "{searchQuery}". Try searching by another ticker or clear the search.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredStocks.map((stock, index) => (
+                        <tr key={stock.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-lg bg-[#2D2A26]/5 text-[#2D2A26] font-bold text-xs flex items-center justify-center">
+                                #{index + 1}
+                              </span>
+                              <div>
+                                <div className="font-bold text-[#2D2A26]">{stock.name}</div>
+                                <div className="text-xs text-[#2D2A26]/50">{stock.symbol} • {stock.sector}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-xs font-semibold text-[#2D2A26]/80">
+                            ₹{(stock.marketCapCr / 1000).toFixed(1)}k Cr
+                          </td>
+                          <td className="py-4 px-4 font-bold">₹{stock.price.toFixed(2)}</td>
+                          <td className="py-4 px-4">
+                            <span className={`font-semibold ${stock.pe > 60 ? 'text-[#FF7B54]' : 'text-[#2D2A26]'}`}>
+                              {stock.pe}x
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`font-semibold ${stock.roe > 15 ? 'text-[#2EC4B6]' : 'text-[#2D2A26]'}`}>
+                              {stock.roe}%
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`font-semibold ${stock.debtToEquity > 1.5 ? 'text-[#FF7B54]' : 'text-[#2EC4B6]'}`}>
+                              {stock.debtToEquity}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`font-semibold ${stock.profitGrowthYoY > 0 ? 'text-[#2EC4B6]' : 'text-[#FF7B54]'}`}>
+                              {stock.profitGrowthYoY > 0 ? '+' : ''}{stock.profitGrowthYoY}%
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold ${
+                              stock.strengthScore >= 80 ? 'bg-[#2EC4B6]/20 text-[#2EC4B6]' :
+                              stock.strengthScore >= 60 ? 'bg-[#64B5F6]/20 text-[#2D2A26]' :
+                              'bg-[#FF7B54]/20 text-[#FF7B54]'
+                            }`}>
+                              {stock.strengthScore}/100
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <button
+                              onClick={() => setSelectedStockDrawer(stock)}
+                              className="px-3 py-1.5 rounded-xl bg-[#FAF7F2] border border-[#2D2A26]/20 text-xs font-bold hover:bg-[#2D2A26] hover:text-white transition-all"
+                            >
+                              Ratios & Alpha
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -722,10 +1014,10 @@ export default function App() {
                   </label>
                   <select 
                     value={selectedBenchmark.id} 
-                    onChange={(e) => setSelectedBenchmark(STOCKS_DATA.find(s => s.id === e.target.value))}
+                    onChange={(e) => setSelectedBenchmark(stocksList.find(s => s.id === e.target.value))}
                     className="w-full p-3 rounded-xl bg-white border border-[#2D2A26]/20 font-bold text-sm outline-none"
                   >
-                    {STOCKS_DATA.map(st => (
+                    {stocksList.map(st => (
                       <option key={st.id} value={st.id}>{st.name} ({st.symbol}) — P/E: {st.pe}x</option>
                     ))}
                   </select>
@@ -738,11 +1030,11 @@ export default function App() {
                   </label>
                   <select 
                     value={selectedTarget.id} 
-                    onChange={(e) => setSelectedTarget(STOCKS_DATA.find(s => s.id === e.target.value))}
+                    onChange={(e) => setSelectedTarget(stocksList.find(s => s.id === e.target.value))}
                     className="w-full p-3 rounded-xl bg-white border border-[#2D2A26]/20 font-bold text-sm outline-none"
                   >
-                    {STOCKS_DATA.map(st => (
-                      <option key={st.id} value={st.id}>{st.name} ({st.symbol}) — Price: ₹{st.price}</option>
+                    {stocksList.map(st => (
+                      <option key={st.id} value={st.id}>{st.name} ({st.symbol}) — Price: ₹{st.price.toFixed(2)}</option>
                     ))}
                   </select>
                 </div>
@@ -760,14 +1052,14 @@ export default function App() {
                 </div>
                 <input 
                   type="range" 
-                  min={Math.round(selectedTarget.price)} 
+                  min={Math.max(1, Math.round(selectedTarget.price))} 
                   max={Math.round(selectedTarget.price * 8)} 
                   value={targetPriceGoal} 
                   onChange={(e) => setTargetPriceGoal(Number(e.target.value))}
                   className="w-full h-3 bg-white rounded-lg appearance-none cursor-pointer accent-[#FF7B54]"
                 />
                 <div className="flex justify-between text-xs text-[#2D2A26]/60 mt-2 font-semibold">
-                  <span>Current: ₹{selectedTarget.price}</span>
+                  <span>Current: ₹{selectedTarget.price.toFixed(2)}</span>
                   <span>Target: ₹{targetPriceGoal} (+{parityMetrics?.priceSurgePct}%)</span>
                 </div>
               </div>
@@ -1061,18 +1353,19 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => {
-                        // Quick 1-click covered call demo
                         if (virtualCash < 165000) {
                           alert('Insufficient virtual balance!');
                           return;
                         }
-                        setVirtualCash(prev => prev - 164250 + 2400);
+                        const hdfc = stocksList.find(s=>s.symbol==='HDFCBANK');
+                        const hdfcPrice = hdfc ? hdfc.price : 1648.50;
+                        setVirtualCash(prev => prev - (hdfcPrice * 100) + 2400);
                         setPositions([
                           ...positions,
-                          { id: Date.now(), symbol: 'HDFCBANK (Covered Lot)', type: 'EQUITY', qty: 100, avgPrice: 1642.50, ltp: 1642.50 },
+                          { id: Date.now(), symbol: 'HDFCBANK (Covered Lot)', type: 'EQUITY', qty: 100, avgPrice: hdfcPrice, ltp: hdfcPrice },
                           { id: Date.now() + 1, symbol: 'HDFCBANK 1700 CE', type: 'CE (SHORT)', qty: -100, avgPrice: 24.00, ltp: 24.00 }
                         ]);
-                        alert('Deployed Covered Call: Bought 100 HDFCBANK shares + Sold 1700 Call for ₹2,400 upfront premium income!');
+                        alert(`Deployed Covered Call: Bought 100 HDFCBANK shares @ ₹${hdfcPrice.toFixed(2)} + Sold 1700 Call for ₹2,400 upfront premium income!`);
                       }}
                       className="px-4 py-2.5 rounded-2xl bg-[#FF7B54] text-white text-sm font-bold hover:bg-[#FF7B54]/90 transition-all shadow-sm"
                     >
